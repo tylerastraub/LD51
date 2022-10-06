@@ -60,7 +60,7 @@ bool GameState::init() {
     // ecs->addComponent<WalljumpComponent>(_player, WalljumpComponent{});
     // ecs->addComponent<BootsComponent>(_player, BootsComponent{});
     
-    prefab::Pickup::create({56, 56}, PickupType::WEAPON);
+    prefab::Pickup::create({56, 72}, PickupType::WEAPON);
     prefab::Pickup::create({272, 168}, PickupType::JUMP);
     prefab::Pickup::create({1584, 216}, PickupType::WALLJUMP);
     prefab::Pickup::create({1160, 312}, PickupType::BOOTS);
@@ -173,12 +173,27 @@ void GameState::tick(float timescale) {
         auto transform = ecs->getComponent<TransformComponent>(checkpoint);
         _checkpointPos = {transform.position.x, transform.position.y - 8};
         for(auto oldCheckpoint : ecs->getAllOf<CheckpointComponent>()) {
-            if(oldCheckpoint == checkpoint) continue;
-            auto& checkpointComp = ecs->getComponent<CheckpointComponent>(oldCheckpoint);
+            if(oldCheckpoint == checkpoint) {
+                auto& newCheckpointComp = ecs->getComponent<CheckpointComponent>(checkpoint);
+                newCheckpointComp.isActive = true;
+                if(!_wasCollidingWithCheckpointLastFrame) {
+                    _timer.reset();
+                    _wasCollidingWithCheckpointLastFrame = true;
+                    // this is not a great way to test but whateva
+                    if(!getAudioPlayer()->isPlaying(-1, AudioSound::CHECKPOINT_RESPAWN)) {
+                        newCheckpointComp.onActivatedScript->update(checkpoint, timescale, getAudioPlayer());
+                    }
+                }
+                continue;
+            }
+            auto& oldCheckpointComp = ecs->getComponent<CheckpointComponent>(oldCheckpoint);
             auto& state = ecs->getComponent<StateComponent>(oldCheckpoint);
-            checkpointComp.isActive = false;
+            oldCheckpointComp.isActive = false;
             state.state = EntityState::IDLE;
         }
+    }
+    else {
+        _wasCollidingWithCheckpointLastFrame = false;
     }
     
     Entity goal;

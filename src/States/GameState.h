@@ -68,6 +68,7 @@ private:
     std::vector<strb::vec2> _engineSpawnList;
 
     bool _gameOver = false;
+    bool _wasCollidingWithCheckpointLastFrame = false;
 };
 
 #endif

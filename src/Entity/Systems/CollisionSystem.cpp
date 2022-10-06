@@ -261,17 +261,13 @@ bool CollisionSystem::checkForPlayerAndCheckpointCollisions(Entity player, float
     auto playerCollision = ecs->getComponent<CollisionComponent>(player);
     for(auto checkpoint : ecs->getAllOf<CheckpointComponent>()) {
         auto& checkpointComp = ecs->getComponent<CheckpointComponent>(checkpoint);
-        if(!checkpointComp.isActive) {
-            auto checkpointCollision = ecs->getComponent<CollisionComponent>(checkpoint);
-            auto& checkpointTransform = ecs->getComponent<TransformComponent>(checkpoint);
-            checkpointCollision.collisionRect.x = checkpointTransform.position.x + checkpointCollision.collisionRectOffset.x;
-            checkpointCollision.collisionRect.y = checkpointTransform.position.y + checkpointCollision.collisionRectOffset.y;
-            if(SDL_HasIntersection(&playerCollision.collisionRect, &checkpointCollision.collisionRect)) {
-                checkpointResult = checkpoint;
-                checkpointComp.onActivatedScript->update(checkpointResult, timescale, _audioPlayer);
-                checkpointComp.isActive = true;
-                return true;
-            }
+        auto checkpointCollision = ecs->getComponent<CollisionComponent>(checkpoint);
+        auto& checkpointTransform = ecs->getComponent<TransformComponent>(checkpoint);
+        checkpointCollision.collisionRect.x = checkpointTransform.position.x + checkpointCollision.collisionRectOffset.x;
+        checkpointCollision.collisionRect.y = checkpointTransform.position.y + checkpointCollision.collisionRectOffset.y;
+        if(SDL_HasIntersection(&playerCollision.collisionRect, &checkpointCollision.collisionRect)) {
+            checkpointResult = checkpoint;
+            return true;
         }
     }
     return false;
